@@ -1,4 +1,6 @@
 #include <ros/ros.h>
+#include <ros/package.h>
+#include <cstdlib>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/CameraInfo.h>
@@ -6,6 +8,7 @@
 #include <sensor_msgs/SetCameraInfo.h>
 #include <dynamic_reconfigure/server.h>
 #include <roboscan_nsl3130/roboscan_nsl3130Config.h>
+#include <roboscan_nsl3130/custom_pub_msg.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include "cartesian_transform.hpp"
@@ -20,7 +23,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
-//#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/Marker.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <sensor_msgs/LaserScan.h>
 
@@ -112,9 +115,43 @@ double ranges[320];
 double intensities[320];
 
 int count = 0;      
-//
+
+//Create Var
+bool paramSave = false;
+bool areaBtn[4] {false, false, false, false};
+
+double areaScaleX[4];
+double areaScaleY[4];
+double areaScaleZ[4];
+
+double areaPosX[4];
+double areaPosY[4];
+double areaPosZ[4];
+
+int pointCount[4] {0, 0, 0, 0};
+
+bool pointDetect[4];
+
+double x_min[4];
+double x_max[4];
+double y_min[4];
+double y_max[4];
+double z_min[4];
+double z_max[4];
+
+// Create Ros value
+visualization_msgs::Marker box_marker0;
+visualization_msgs::Marker box_marker1;
+visualization_msgs::Marker box_marker2;
+visualization_msgs::Marker box_marker3;
+roboscan_nsl3130::custom_pub_msg msgs;
+
+//std::String msg;
+
+//end
 
 uint32_t frameSeq;
+
 boost::signals2::connection connectionFrames;
 boost::signals2::connection connectionCameraInfo;
 
@@ -122,6 +159,7 @@ ros::Publisher distanceImagePublisher;
 ros::Publisher amplitudeImagePublisher;
 ros::Publisher dcsImagePublisher;
 ros::Publisher grayImagePublisher;
+
 
 image_transport::Publisher imagePublisher;
 
@@ -133,8 +171,16 @@ Interface interface;
 CartesianTransform cartesianTransform;
 sensor_msgs::CameraInfo cameraInfo;
 
-//ros::Publisher markerPub;
+
+ros::Publisher areaMsgsPublisher;
 ros::Publisher scanPub;
+
+ros::Publisher marker0Pub;
+ros::Publisher marker1Pub;
+ros::Publisher marker2Pub;
+ros::Publisher marker3Pub;
+
+
 //=======================================================================
 
 typedef struct _RGB888Pixel
@@ -224,6 +270,16 @@ static void callback_mouse_click(int event, int x, int y, int flags, void* user_
 	else if (event == cv::EVENT_MOUSEMOVE)
 	{
 	}
+}
+
+
+void paramDump()
+{
+    std::string package_path = ros::package::getPath("roboscan_nsl3130");
+    
+    std::string full_path = package_path + "/rqt";
+    std::string command = "rosparam dump " + full_path + "/rqt.yaml";
+    int ret = system(command.c_str());
 }
 
 void setWinName(bool configCvShow)
@@ -384,11 +440,12 @@ int Convert_To_RGB24( float fValue, RGB888Pixel *nRGBData, float fMinValue, floa
       imageLidar.at<Vec3b>(y, x)[1] = color;
       imageLidar.at<Vec3b>(y, x)[2] = color; 
     }
+    ROS_INFO("grayscale");
 }
 
 void setParameters()
 {
-    interface.stopStream();    
+    interface.stopStream();   
 //	interface.setUdpPort(0);
     interface.setMinAmplitude(minAmplitude);
     interface.setIntegrationTime(int0, int1, int2, intGr);
@@ -399,6 +456,8 @@ void setParameters()
 
     interface.setAdcOverflowSaturation(bAdcOverflow, bSaturation);
     interface.setGrayscaleIlluminationMode(grayscaleIlluminationMode);
+
+
 
     uint8_t modIndex;
     if(frequencyModulation == 0) modIndex = 1;
@@ -421,6 +480,8 @@ void setParameters()
 
     }else{
         interface.stopStream();
+        
+  
     }
 
     if(old_lensCenterOffsetX != lensCenterOffsetX || old_lensCenterOffsetY != lensCenterOffsetY || old_lensType != lensType){
@@ -429,6 +490,7 @@ void setParameters()
         old_lensCenterOffsetY = lensCenterOffsetY;
         old_lensType = lensType;
     }
+
 
     ROS_INFO("set parameters...");
     ROS_DEBUG("lens_type %d", lensType);
@@ -442,6 +504,7 @@ void setParameters()
     ROS_DEBUG("integration_time2 %d", int2);
     ROS_DEBUG("integration_time_gray %d", intGr);
     ROS_DEBUG("min_amplitude %d", minAmplitude);
+
     ROS_DEBUG("frequency_modulation %d", frequencyModulation);
     ROS_DEBUG("channel %d ", channel);
     ROS_DEBUG("median_filter %d ", medianFilter);
@@ -459,8 +522,145 @@ void setParameters()
     ROS_DEBUG("transform_angle %d", transformAngle);
     ROS_DEBUG("cut_pixels %d", cutPixels);
     ROS_DEBUG("cv_show %d", cvShow);
+
+    // Area 0
+    ROS_DEBUG("area_0 : %d", areaBtn[0]);
+    ROS_DEBUG("area_0_Length Scale: %f", areaScaleX[0]);
+    ROS_DEBUG("area_0_Width Scale: %f", areaScaleY[0]);
+    ROS_DEBUG("area_0_Height Scale: %f", areaScaleZ[0]);
+    ROS_DEBUG("area_0_Length Position: %f", areaPosX[0]);
+    ROS_DEBUG("area_0_Width Position: %f", areaPosY[0]);
+    ROS_DEBUG("area_0_Height Position: %f", areaPosZ[0]);
+
+    // Area 1
+    ROS_DEBUG("area_1 : %d", areaBtn[1]);
+    ROS_DEBUG("area_1_ Length Scale: %f", areaScaleX[1]);
+    ROS_DEBUG("area_1_ Width Scale: %f", areaScaleY[1]);
+    ROS_DEBUG("area_1_ Height Scale: %f", areaScaleZ[1]);
+    ROS_DEBUG("area_1_ Length Position: %f", areaPosX[1]);
+    ROS_DEBUG("area_1_ Width Position: %f", areaPosY[1]);
+    ROS_DEBUG("area_1_ Height Position: %f", areaPosZ[1]);
+
+    // Area 2
+    ROS_DEBUG("area_2 : %d", areaBtn[2]);
+    ROS_DEBUG("area_2_ Length Scale: %f", areaScaleX[2]);
+    ROS_DEBUG("area_2_ Width Scale: %f", areaScaleY[2]);
+    ROS_DEBUG("area_2_ Height Scale: %f", areaScaleZ[2]);
+    ROS_DEBUG("area_2_ Length Position: %f", areaPosX[2]);
+    ROS_DEBUG("area_2_ Width Position: %f", areaPosY[2]);
+    ROS_DEBUG("area_2_ Height Position: %f", areaPosZ[2]);
+
+    // Area 3
+    ROS_DEBUG("area_3 : %d", areaBtn[3]);
+    ROS_DEBUG("area_3_Length Scale: %f", areaScaleX[3]);
+    ROS_DEBUG("area_3_Width Scale: %f", areaScaleY[3]);
+    ROS_DEBUG("area_3_Height Scale: %f", areaScaleZ[3]);
+    ROS_DEBUG("area_3_Length Position: %f", areaPosX[3]);
+    ROS_DEBUG("area_3_Width Position: %f", areaPosY[3]);
+    ROS_DEBUG("area_3_Height Position: %f", areaPosZ[3]);
+
     
+
+//area0
+    if(areaBtn[0])
+        {
+            box_marker0.action = visualization_msgs::Marker::ADD;
+            box_marker0.scale.x = areaScaleX[0];
+            box_marker0.scale.y = areaScaleY[0];
+            box_marker0.scale.z = areaScaleZ[0];
+
+            box_marker0.pose.position.x = areaScaleX[0] / 2.0 + areaPosX[0];
+            box_marker0.pose.position.y = areaPosY[0];
+            box_marker0.pose.position.z = areaPosZ[0];
+
+
+            x_min[0] = areaPosX[0] , x_max[0] = areaPosX[0] + areaScaleX[0] ;
+            y_min[0] = areaPosY[0] - areaScaleY[0] / 2.0, y_max[0] = areaPosY[0] + areaScaleY[0] / 2.0;
+            z_min[0] = areaPosZ[0] - areaScaleZ[0] / 2.0, z_max[0] = areaPosZ[0] + areaScaleZ[0] / 2.0;
+
+        }
+        else
+        {
+            box_marker0.action = visualization_msgs::Marker::DELETE;
+            pointCount[0] = 0;
+            pointDetect[0] = false;
+        }
+
+//area1
+        if(areaBtn[1])
+        {
+            box_marker1.action = visualization_msgs::Marker::ADD;
+            box_marker1.scale.x = areaScaleX[1];
+            box_marker1.scale.y = areaScaleY[1];
+            box_marker1.scale.z = areaScaleZ[1];
+
+            box_marker1.pose.position.x = areaScaleX[1] / 2.0 + areaPosX[1];
+            box_marker1.pose.position.y = areaPosY[1];
+            box_marker1.pose.position.z = areaPosZ[1];
+
+
+            x_min[1] = areaPosX[1] , x_max[1] = areaPosX[1] + areaScaleX[1] ;
+            y_min[1] = areaPosY[1] - areaScaleY[1] / 2.0, y_max[1] = areaPosY[1] + areaScaleY[1] / 2.0;
+            z_min[1] = areaPosZ[1] - areaScaleZ[1] / 2.0, z_max[1] = areaPosZ[1] + areaScaleZ[1] / 2.0;
+
+        }
+        else
+        {
+            box_marker1.action = visualization_msgs::Marker::DELETE;
+            pointCount[1] = 0;
+            pointDetect[1] = false;
+        }
+
+        if(areaBtn[2])
+        {
+            box_marker2.action = visualization_msgs::Marker::ADD;
+            box_marker2.scale.x = areaScaleX[2];
+            box_marker2.scale.y = areaScaleY[2];
+            box_marker2.scale.z = areaScaleZ[2];
+
+            box_marker2.pose.position.x = areaScaleX[2] / 2.0 + areaPosX[2];
+            box_marker2.pose.position.y = areaPosY[2];
+            box_marker2.pose.position.z = areaPosZ[2];
+
+            x_min[2] = areaPosX[2] , x_max[2] = areaPosX[2] + areaScaleX[2] ;
+            y_min[2] = areaPosY[2] - areaScaleY[2] / 2.0, y_max[2] = areaPosY[2] + areaScaleY[2] / 2.0;
+            z_min[2] = areaPosZ[2] - areaScaleZ[2] / 2.0, z_max[2] = areaPosZ[2] + areaScaleZ[2] / 2.0;
+        }
+        else
+        {
+            box_marker2.action = visualization_msgs::Marker::DELETE;
+            pointCount[2] = 0;
+            pointDetect[2] = false;
+        }            
+
+        if(areaBtn[3])
+        {
+            box_marker3.action = visualization_msgs::Marker::ADD;
+            box_marker3.scale.x = areaScaleX[3];
+            box_marker3.scale.y = areaScaleY[3];
+            box_marker3.scale.z = areaScaleZ[3];
+
+            box_marker3.pose.position.x = areaScaleX[3] / 2.0 + areaPosX[3];
+            box_marker3.pose.position.y = areaPosY[3];
+            box_marker3.pose.position.z = areaPosZ[3];
+
+            pointCount[3] = 0;
+
+            x_min[3] = areaPosX[3] , x_max[3] = areaPosX[3] + areaScaleX[3] ;
+            y_min[3] = areaPosY[3] - areaScaleY[3] / 2.0, y_max[3] = areaPosY[3] + areaScaleY[3] / 2.0;
+            z_min[3] = areaPosZ[3] - areaScaleZ[3] / 2.0, z_max[3] = areaPosZ[3] + areaScaleZ[3] / 2.0; 
+        }
+        else
+        {
+            box_marker3.action = visualization_msgs::Marker::DELETE;
+            pointCount[3] = 0;
+            pointDetect[3] = false;
+        }
+        paramSave = true;
+ 
 }
+
+
 
 void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t level)
 {
@@ -487,6 +687,10 @@ void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t lev
     cartesian = config.cartesian;
     publishPointCloud = config.publish_point_cloud;
 
+    
+
+    
+    
     transformAngle = config.transform_angle;
     cutPixels = config.cut_pixels;
 	maxDistance = config.max_distance;
@@ -495,6 +699,49 @@ void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t lev
 	used_dual_beam_distance = config.dual_beam_dist;
 
 	setWinName(config.cvShow);
+    
+
+    //Area
+    areaBtn[0] = config.area0;
+    areaScaleX[0] = config.a0_length_scale;
+    areaScaleY[0] = config.a0_width_scale;
+    areaScaleZ[0] = config.a0_height_scale;
+
+    areaPosX[0] = config.a0_length_position;
+    areaPosY[0] = config.a0_width_position;
+    areaPosZ[0] = config.a0_height_position;
+
+
+    areaBtn[1] = config.area1;
+    areaScaleX[1] = config.a1_length_scale;
+    areaScaleY[1] = config.a1_width_scale;
+    areaScaleZ[1] = config.a1_height_scale;
+
+    areaPosX[1] = config.a1_length_position;
+    areaPosY[1] = config.a1_width_position;
+    areaPosZ[1] = config.a1_height_position;
+
+    
+    areaBtn[2] = config.area2;
+    areaScaleX[2] = config.a2_length_scale;
+    areaScaleY[2] = config.a2_width_scale;
+    areaScaleZ[2] = config.a2_height_scale;
+    
+    areaPosX[2] = config.a2_length_position;
+    areaPosY[2] = config.a2_width_position;
+    areaPosZ[2] = config.a2_height_position;
+
+    areaBtn[3] = config.area3;
+    areaScaleX[3] = config.a3_length_scale;
+    areaScaleY[3] = config.a3_width_scale;
+    areaScaleZ[3] = config.a3_height_scale;
+    
+    areaPosX[3] = config.a3_length_position;
+    areaPosY[3] = config.a3_width_position;
+    areaPosZ[3] = config.a3_height_position;
+
+
+
 
     //add
     grayscaleIlluminationMode = 1;
@@ -548,9 +795,12 @@ void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t lev
   
 
 	//printf("x = %d y = %d width = %d height = %d\n", roi_leftX, roi_topY, roi_rightX, roi_bottomY);
-
-    setParameters();
+    
+    setParameters();  
 }
+
+
+
 
 
 bool setCameraInfo(sensor_msgs::SetCameraInfo::Request& req, sensor_msgs::SetCameraInfo::Response& res)
@@ -664,7 +914,6 @@ cv::Mat addDistanceInfo(cv::Mat distMat, std::shared_ptr<Frame> frame)
 		cv::Mat infoImage(50, distMat.cols, CV_8UC3, Scalar(255, 255, 255));
 		cv::vconcat(distMat, infoImage, distMat);
 	}
-
 	return distMat;
 }
 
@@ -722,7 +971,6 @@ cv::Mat addDCSInfo(cv::Mat distMat, std::shared_ptr<Frame> frame)
 		cv::Mat infoImage(50, distMat.cols, CV_8UC3, Scalar(255, 255, 255));
 		cv::vconcat(distMat, infoImage, distMat);
 	}
-
 	return distMat;
 }
 
@@ -782,7 +1030,6 @@ void setAmplitudeColor(cv::Mat &imageLidar, int x, int y, int value, double end_
 		
 		imageLidar.at<Vec3b>(y, x) = colorVector.at(index);
 	}
-
 }
 
 
@@ -915,6 +1162,26 @@ void updateFrame(std::shared_ptr<Frame> frame)
 #else
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 #endif
+
+        if(areaBtn[0])
+        {
+            for(const auto& point : cloud->points)
+            {
+                if(point.x >= x_min[0] && point.x <= x_max[0] &&
+                point.y >= y_min[0] && point.y <= y_max[0] &&
+                point.z >= z_min[0] && point.z <= z_max[0]
+                )
+                {
+                    pointCount[0]++;
+                }
+            }   
+            if(pointCount[0] > 0)
+                pointDetect[0] = true;
+            else
+                pointDetect[0] = false; 
+        }
+
+        
         cloud->header.frame_id = "roboscan_frame";
         cloud->header.stamp = pcl_conversions::toPCL(ros::Time::now());
         cloud->width = static_cast<uint32_t>(frame->width);
@@ -948,6 +1215,11 @@ void updateFrame(std::shared_ptr<Frame> frame)
         scan.ranges.resize(num_readings);
         scan.intensities.resize(num_readings);
 
+        pointCount[0] = 0;
+        pointCount[1] = 0;
+        pointCount[2] = 0;
+        pointCount[3] = 0;
+
         for(k=0, l=0, y=0; y< frame->height; y++){
             for(x=0, pc = frame->width-1; x< frame->width; x++, k++, l+=2, pc--){
 #ifdef USED_INTENSITY
@@ -955,6 +1227,8 @@ void updateFrame(std::shared_ptr<Frame> frame)
 #else
                 pcl::PointXYZRGB &p = cloud->points[k];
 #endif
+
+
                 distance = (frame->distData[l+1] << 8) + frame->distData[l];
                 amplitude = (frame->amplData[l+1] << 8)  + frame->amplData[l];
 				grayscale = (frame->grayData[l+1] << 8)  + frame->grayData[l];
@@ -1028,6 +1302,71 @@ void updateFrame(std::shared_ptr<Frame> frame)
                     p.y = std::numeric_limits<float>::quiet_NaN();
                     p.z = std::numeric_limits<float>::quiet_NaN();
                 }
+
+//dataCheck
+//area0
+                if(areaBtn[0])
+                {
+                    if(p.x >= x_min[0] && p.x <= x_max[0] &&
+                    p.y >= y_min[0] && p.y <= y_max[0] &&
+                    p.z >= z_min[0] && p.z <= z_max[0]
+                    )
+                    {
+                        pointCount[0]++;
+                    }
+                    if(pointCount[0] > 0)
+                        pointDetect[0] = true;
+                    else
+                        pointDetect[0] = false; 
+                }
+
+//area1
+                if(areaBtn[1])
+                {
+                    if(p.x >= x_min[1] && p.x <= x_max[1] &&
+                    p.y >= y_min[1] && p.y <= y_max[1] &&
+                    p.z >= z_min[1] && p.z <= z_max[1]
+                    )
+                    {
+                        pointCount[1]++;
+                    }
+                    if(pointCount[1] > 0)
+                        pointDetect[1] = true;
+                    else
+                        pointDetect[1] = false; 
+                }
+
+//area2
+                if(areaBtn[2])
+                {
+                    if(p.x >= x_min[2] && p.x <= x_max[2] &&
+                    p.y >= y_min[2] && p.y <= y_max[2] &&
+                    p.z >= z_min[2] && p.z <= z_max[2]
+                    )
+                    {
+                        pointCount[2]++;
+                    }
+                    if(pointCount[2] > 0)
+                        pointDetect[2] = true;
+                    else
+                        pointDetect[2] = false; 
+                }
+
+//area3
+                if(areaBtn[3])
+                {
+                    if(p.x >= x_min[3] && p.x <= x_max[3] &&
+                    p.y >= y_min[3] && p.y <= y_max[3] &&
+                    p.z >= z_min[3] && p.z <= z_max[3]
+                    )
+                    {
+                        pointCount[3]++;
+                    }
+                    if(pointCount[3] > 0)
+                        pointDetect[3] = true;
+                    else
+                        pointDetect[3] = false; 
+                }
             }
         }
 
@@ -1070,13 +1409,43 @@ void updateFrame(std::shared_ptr<Frame> frame)
         cv_ptr->encoding = "bgr8";
 
         imagePublisher.publish(cv_ptr->toImageMsg());
-
         scanPub.publish(scan);
+
+        marker0Pub.publish(box_marker0);
+        marker0Pub.publish(box_marker1);
+        marker0Pub.publish(box_marker2);
+        marker0Pub.publish(box_marker3);
+
+
+        msgs.header.seq = frameSeq;
+        msgs.header.frame_id = "roboscan_frame";
+        msgs.header.stamp = ros::Time::now();
+        msgs.area0 = pointDetect[0];
+        msgs.point0 = pointCount[0];
+
+        msgs.area1 = pointDetect[1];
+        msgs.point1 = pointCount[1];
+
+        msgs.area2 = pointDetect[2];
+        msgs.point2 = pointCount[2];
+
+        msgs.area3 = pointDetect[3];    
+        msgs.point3 = pointCount[3];                       
+        areaMsgsPublisher.publish(msgs);
 
         delete[] pTex;
     }
-
+        if(paramSave)
+        {
+            paramDump();
+            paramSave = false;
+        }
 }
+
+
+
+
+
 
 
 //===================================================
@@ -1115,10 +1484,56 @@ void initialise()
     nh.getParam("cv_show", cvShow);
 
 
+    //Area 0
+    nh.getParam("area0", areaBtn[0]);
+    nh.getParam("a0_length_scale", areaScaleX[0]);
+    nh.getParam("a0_width_scale", areaScaleY[0]);
+    nh.getParam("a0_height_scale", areaScaleZ[0]);   
+
+    nh.getParam("a0_length_position", areaPosX[0]);
+    nh.getParam("a0_width_position", areaPosY[0]);
+    nh.getParam("a0_height_position", areaPosZ[0]);   
+    
+    //Area 1
+    nh.getParam("area1", areaBtn[1]);
+    nh.getParam("a1_length_scale", areaScaleX[1]);
+    nh.getParam("a1_width_scale", areaScaleY[1]);
+    nh.getParam("a1_height_scale", areaScaleZ[1]);   
+
+    nh.getParam("a1_length_position", areaPosX[1]);
+    nh.getParam("a1_width_position", areaPosY[1]);
+    nh.getParam("a1_height_position", areaPosZ[1]);  
+
+    //Area 2
+    nh.getParam("area2", areaBtn[2]);
+    nh.getParam("a2_length_scale", areaScaleX[2]);
+    nh.getParam("a2_width_scale", areaScaleY[2]);
+    nh.getParam("a2_height_scale", areaScaleZ[2]);   
+
+    nh.getParam("a2_length_position", areaPosX[2]);
+    nh.getParam("a2_width_position", areaPosY[2]);
+    nh.getParam("a2_height_position", areaPosZ[2]);  
+
+    //Area 3
+    nh.getParam("area3", areaBtn[3]);
+    nh.getParam("a3_length_scale", areaScaleX[3]);
+    nh.getParam("a3_width_scale", areaScaleY[3]);
+    nh.getParam("a3_height_scale", areaScaleZ[3]);   
+
+    nh.getParam("a3_length_position", areaPosX[3]);
+    nh.getParam("a3_width_position", areaPosY[3]);
+    nh.getParam("a3_height_position", areaPosZ[3]);  
+
+
+
+
     //advertise publishers
     distanceImagePublisher = nh.advertise<sensor_msgs::Image>("distance_image_raw", 1000);
     amplitudeImagePublisher = nh.advertise<sensor_msgs::Image>("amplitude_image_raw", 1000);
     dcsImagePublisher = nh.advertise<sensor_msgs::Image>("dcs_image_raw", 1000);
+
+
+
 
 #ifdef USED_INTENSITY
     pointCloud2Publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI> > ("points", 100);
@@ -1129,11 +1544,23 @@ void initialise()
     cameraInfoPublisher = nh.advertise<sensor_msgs::CameraInfo>("camera_info", 1000);
     grayImagePublisher = nh.advertise<sensor_msgs::Image>("gray_image_raw", 1000);
     scanPub = nh.advertise<sensor_msgs::LaserScan>("scan", 50);
+    marker0Pub = nh.advertise<visualization_msgs::Marker>("Area0", 1000);
+    marker1Pub = nh.advertise<visualization_msgs::Marker>("Area1", 1000);
+    marker2Pub = nh.advertise<visualization_msgs::Marker>("Area2", 1000); 
+    marker3Pub = nh.advertise<visualization_msgs::Marker>("Area3", 1000);       
+
+
+    //area advertise publishers
+    areaMsgsPublisher = nh.advertise<roboscan_nsl3130::custom_pub_msg>("Area", 100);
+
 
 
     //advertise image Publisher
     image_transport::ImageTransport it_(nh);
     imagePublisher = it_.advertise("image_distance", 1000);
+
+
+    
 
     //advertise services
     cameraInfoService = nh.advertiseService("set_camera_info", setCameraInfo);
@@ -1157,7 +1584,101 @@ void initialise()
 	}
 
     ROS_INFO("roboscan_nsl3130 node");
+
+
+//Box Create
+//marker 0
+    box_marker0.header.frame_id = "roboscan_frame";
+    box_marker0.ns = "Markers_Box_" + std::to_string(0);
+    box_marker0.id = 0;
+    box_marker0.type = visualization_msgs::Marker::CUBE;
+    box_marker0.action = visualization_msgs::Marker::ADD;
+    box_marker0.pose.position.x = areaScaleX[0] / 2.0 + areaPosX[0];
+    box_marker0.pose.position.y = areaPosY[0];
+    box_marker0.pose.position.z = areaPosZ[0];
+    box_marker0.pose.orientation.x = 0.0;
+    box_marker0.pose.orientation.y = 0.0;
+    box_marker0.pose.orientation.z = 0.0; 
+    box_marker0.pose.orientation.w = 1.0;
+    box_marker0.scale.x = areaScaleX[0];
+    box_marker0.scale.y = areaScaleY[0];
+    box_marker0.scale.z = areaScaleZ[0];
+
+    box_marker0.color.r = 1.0f;
+    box_marker0.color.g = 0.0f;    
+    box_marker0.color.b = 0.0f;
+    box_marker0.color.a = 0.3f;
+
+//marker 1
+    box_marker1.header.frame_id = "roboscan_frame";
+    box_marker1.ns = "Markers_Box_" + std::to_string(1);
+    box_marker1.id = 1;
+    box_marker1.type = visualization_msgs::Marker::CUBE;
+    box_marker1.action = visualization_msgs::Marker::ADD;
+    box_marker1.pose.position.x = areaScaleX[1] / 2.0 + areaPosX[1];
+    box_marker1.pose.position.y = areaPosY[1];
+    box_marker1.pose.position.z = areaPosZ[1];
+    box_marker1.pose.orientation.x = 0.0;
+    box_marker1.pose.orientation.y = 0.0;
+    box_marker1.pose.orientation.z = 0.0; 
+    box_marker1.pose.orientation.w = 1.0;
+    box_marker1.scale.x = areaScaleX[1];
+    box_marker1.scale.y = areaScaleY[1];
+    box_marker1.scale.z = areaScaleZ[1];
+
+    box_marker1.color.r = 1.0f;
+    box_marker1.color.g = 1.0f;    
+    box_marker1.color.b = 0.0f;
+    box_marker1.color.a = 0.3f;
+
+//marker 2
+    box_marker2.header.frame_id = "roboscan_frame";
+    box_marker2.ns = "Markers_Box_" + std::to_string(2);
+    box_marker2.id = 2;
+    box_marker2.type = visualization_msgs::Marker::CUBE;
+    box_marker2.action = visualization_msgs::Marker::ADD;
+    box_marker2.pose.position.x = areaScaleX[2] / 2.0 + areaPosX[2];
+    box_marker2.pose.position.y = areaPosY[2];
+    box_marker2.pose.position.z = areaPosZ[2];
+    box_marker2.pose.orientation.x = 0.0;
+    box_marker2.pose.orientation.y = 0.0;
+    box_marker2.pose.orientation.z = 0.0; 
+    box_marker2.pose.orientation.w = 1.0;
+    box_marker2.scale.x = areaScaleX[2];
+    box_marker2.scale.y = areaScaleY[2];
+    box_marker2.scale.z = areaScaleZ[2];
+
+    box_marker2.color.r = 0.5f;
+    box_marker2.color.g = 1.0f;    
+    box_marker2.color.b = 0.0f;
+    box_marker2.color.a = 0.3f;
+
+//marker 3
+    box_marker3.header.frame_id = "roboscan_frame";
+    box_marker3.ns = "Markers_Box_" + std::to_string(3);
+    box_marker3.id = 3;
+    box_marker3.type = visualization_msgs::Marker::CUBE;
+    box_marker3.action = visualization_msgs::Marker::ADD;
+    box_marker3.pose.position.x = areaScaleX[3] / 2.0 + areaPosX[3];
+    box_marker3.pose.position.y = areaPosY[3];
+    box_marker3.pose.position.z = areaPosZ[3];
+    box_marker3.pose.orientation.x = 0.0;
+    box_marker3.pose.orientation.y = 0.0;
+    box_marker3.pose.orientation.z = 0.0; 
+    box_marker3.pose.orientation.w = 1.0;
+    box_marker3.scale.x = areaScaleX[3];
+    box_marker3.scale.y = areaScaleY[3];
+    box_marker3.scale.z = areaScaleZ[3];
+
+    box_marker3.color.r = 0.0f;
+    box_marker3.color.g = 1.0f;    
+    box_marker3.color.b = 0.0f;
+    box_marker3.color.a = 0.3f;
+
+    ROS_INFO("Create BOX");
 }
+
+
 
 
 //==========================================================================
@@ -1167,14 +1688,22 @@ int main(int argc, char **argv)
     //if(ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) ros::console::notifyLoggerLevelsChanged();
 
     ros::init(argc, argv, "roboscan_publish_node");
+
+
     dynamic_reconfigure::Server<roboscan_nsl3130::roboscan_nsl3130Config> server;
     dynamic_reconfigure::Server<roboscan_nsl3130::roboscan_nsl3130Config>::CallbackType f;
     f = boost::bind(&updateConfig, _1, _2);
     server.setCallback(f);
-
+    
     initialise();
     setParameters();
     startStreaming();
+
+
+
+
+    
+    
 
     ros::spin();
 }
