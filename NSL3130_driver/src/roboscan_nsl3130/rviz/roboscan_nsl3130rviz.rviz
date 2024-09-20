@@ -68,7 +68,7 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/Image
-      Enabled: false
+      Enabled: true
       Image Topic: /roboscan_nsl3130/camera/image_distance
       Max Value: 1
       Median window: 5
@@ -78,9 +78,9 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: false
+      Value: true
     - Class: rviz/Image
-      Enabled: true
+      Enabled: false
       Image Topic: /roboscan_nsl3130/camera/amplitude_image_raw
       Max Value: 1
       Median window: 5
@@ -90,7 +90,7 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -149,7 +149,7 @@ Visualization Manager:
       Value: false
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /roboscan_nsl3130/camera/Area0
+      Marker Topic: /roboscan_nsl3130/camera/area0
       Name: Marker
       Namespaces:
         Markers_Box_0: true
@@ -157,26 +157,26 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /roboscan_nsl3130/camera/Area1
+      Marker Topic: /roboscan_nsl3130/camera/area1
       Name: Marker
       Namespaces:
-        {}
+        Markers_Box_1: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /roboscan_nsl3130/camera/Area2
+      Marker Topic: /roboscan_nsl3130/camera/area2
       Name: Marker
       Namespaces:
-        {}
+        Markers_Box_2: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /roboscan_nsl3130/camera/Area3
+      Marker Topic: /roboscan_nsl3130/camera/area3
       Name: Marker
       Namespaces:
-        {}
+        Markers_Box_3: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -222,10 +222,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.20520347356796265
+      Pitch: 0.4852033853530884
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.9103894233703613
+      Yaw: 2.540388822555542
     Saved: ~
 Window Geometry:
   Displays:

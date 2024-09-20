@@ -139,15 +139,14 @@ double y_max[4];
 double z_min[4];
 double z_max[4];
 
+int pointLimit[4];
+
 // Create Ros value
-visualization_msgs::Marker box_marker0;
-visualization_msgs::Marker box_marker1;
-visualization_msgs::Marker box_marker2;
-visualization_msgs::Marker box_marker3;
+visualization_msgs::Marker area0Box;
+visualization_msgs::Marker area1Box;
+visualization_msgs::Marker area2Box;
+visualization_msgs::Marker area3Box;
 roboscan_nsl3130::custom_pub_msg msgs;
-
-//std::String msg;
-
 //end
 
 uint32_t frameSeq;
@@ -175,10 +174,10 @@ sensor_msgs::CameraInfo cameraInfo;
 ros::Publisher areaMsgsPublisher;
 ros::Publisher scanPub;
 
-ros::Publisher marker0Pub;
-ros::Publisher marker1Pub;
-ros::Publisher marker2Pub;
-ros::Publisher marker3Pub;
+ros::Publisher area0Pub;
+ros::Publisher area1Pub;
+ros::Publisher area2Pub;
+ros::Publisher area3Pub;
 
 
 //=======================================================================
@@ -525,54 +524,57 @@ void setParameters()
 
     // Area 0
     ROS_DEBUG("area_0 : %d", areaBtn[0]);
-    ROS_DEBUG("area_0_Length Scale: %f", areaScaleX[0]);
-    ROS_DEBUG("area_0_Width Scale: %f", areaScaleY[0]);
-    ROS_DEBUG("area_0_Height Scale: %f", areaScaleZ[0]);
-    ROS_DEBUG("area_0_Length Position: %f", areaPosX[0]);
-    ROS_DEBUG("area_0_Width Position: %f", areaPosY[0]);
-    ROS_DEBUG("area_0_Height Position: %f", areaPosZ[0]);
+    ROS_DEBUG("area_0_length_scale: %f", areaScaleX[0]);
+    ROS_DEBUG("area_0_width_scale: %f", areaScaleY[0]);
+    ROS_DEBUG("area_0_height_scale: %f", areaScaleZ[0]);
+    ROS_DEBUG("area_0_length_position: %f", areaPosX[0]);
+    ROS_DEBUG("area_0_width_position: %f", areaPosY[0]);
+    ROS_DEBUG("area_0_height_position: %f", areaPosZ[0]);
 
     // Area 1
     ROS_DEBUG("area_1 : %d", areaBtn[1]);
-    ROS_DEBUG("area_1_ Length Scale: %f", areaScaleX[1]);
-    ROS_DEBUG("area_1_ Width Scale: %f", areaScaleY[1]);
-    ROS_DEBUG("area_1_ Height Scale: %f", areaScaleZ[1]);
-    ROS_DEBUG("area_1_ Length Position: %f", areaPosX[1]);
-    ROS_DEBUG("area_1_ Width Position: %f", areaPosY[1]);
-    ROS_DEBUG("area_1_ Height Position: %f", areaPosZ[1]);
+    ROS_DEBUG("area_1_length_scale: %f", areaScaleX[1]);
+    ROS_DEBUG("area_1_width_scale: %f", areaScaleY[1]);
+    ROS_DEBUG("area_1_height_scale: %f", areaScaleZ[1]);
+    ROS_DEBUG("area_1_length_position: %f", areaPosX[1]);
+    ROS_DEBUG("area_1_width_position: %f", areaPosY[1]);
+    ROS_DEBUG("area_1_height_position: %f", areaPosZ[1]);
 
     // Area 2
     ROS_DEBUG("area_2 : %d", areaBtn[2]);
-    ROS_DEBUG("area_2_ Length Scale: %f", areaScaleX[2]);
-    ROS_DEBUG("area_2_ Width Scale: %f", areaScaleY[2]);
-    ROS_DEBUG("area_2_ Height Scale: %f", areaScaleZ[2]);
-    ROS_DEBUG("area_2_ Length Position: %f", areaPosX[2]);
-    ROS_DEBUG("area_2_ Width Position: %f", areaPosY[2]);
-    ROS_DEBUG("area_2_ Height Position: %f", areaPosZ[2]);
+    ROS_DEBUG("area_2_length_scale: %f", areaScaleX[2]);
+    ROS_DEBUG("area_2_width_scale: %f", areaScaleY[2]);
+    ROS_DEBUG("area_2_height_scale: %f", areaScaleZ[2]);
+    ROS_DEBUG("area_2_length_position: %f", areaPosX[2]);
+    ROS_DEBUG("area_2_width_position: %f", areaPosY[2]);
+    ROS_DEBUG("area_2_height_position: %f", areaPosZ[2]);
 
     // Area 3
     ROS_DEBUG("area_3 : %d", areaBtn[3]);
-    ROS_DEBUG("area_3_Length Scale: %f", areaScaleX[3]);
-    ROS_DEBUG("area_3_Width Scale: %f", areaScaleY[3]);
-    ROS_DEBUG("area_3_Height Scale: %f", areaScaleZ[3]);
-    ROS_DEBUG("area_3_Length Position: %f", areaPosX[3]);
-    ROS_DEBUG("area_3_Width Position: %f", areaPosY[3]);
-    ROS_DEBUG("area_3_Height Position: %f", areaPosZ[3]);
+    ROS_DEBUG("area_3_length_scale: %f", areaScaleX[3]);
+    ROS_DEBUG("area_3_width_scale: %f", areaScaleY[3]);
+    ROS_DEBUG("area_3_height_scale: %f", areaScaleZ[3]);
+    ROS_DEBUG("area_3_length_position: %f", areaPosX[3]);
+    ROS_DEBUG("area_3_width_position: %f", areaPosY[3]);
+    ROS_DEBUG("area_3_height_position: %f", areaPosZ[3]);
 
-    
+    ROS_DEBUG("point_limit : %d", pointLimit[0]);
+    ROS_DEBUG("point_limit : %d", pointLimit[1]);
+    ROS_DEBUG("point_limit : %d", pointLimit[2]);
+    ROS_DEBUG("point_limit : %d", pointLimit[3]);
+
 
 //area0
     if(areaBtn[0])
         {
-            box_marker0.action = visualization_msgs::Marker::ADD;
-            box_marker0.scale.x = areaScaleX[0];
-            box_marker0.scale.y = areaScaleY[0];
-            box_marker0.scale.z = areaScaleZ[0];
+            area0Box.action = visualization_msgs::Marker::ADD;
+            area0Box.scale.x = areaScaleX[0];
+            area0Box.scale.y = areaScaleY[0];
+            area0Box.scale.z = areaScaleZ[0];
 
-            box_marker0.pose.position.x = areaScaleX[0] / 2.0 + areaPosX[0];
-            box_marker0.pose.position.y = areaPosY[0];
-            box_marker0.pose.position.z = areaPosZ[0];
-
+            area0Box.pose.position.x = areaScaleX[0] / 2.0 + areaPosX[0];
+            area0Box.pose.position.y = areaPosY[0];
+            area0Box.pose.position.z = areaPosZ[0];
 
             x_min[0] = areaPosX[0] , x_max[0] = areaPosX[0] + areaScaleX[0] ;
             y_min[0] = areaPosY[0] - areaScaleY[0] / 2.0, y_max[0] = areaPosY[0] + areaScaleY[0] / 2.0;
@@ -581,7 +583,7 @@ void setParameters()
         }
         else
         {
-            box_marker0.action = visualization_msgs::Marker::DELETE;
+            area0Box.action = visualization_msgs::Marker::DELETE;
             pointCount[0] = 0;
             pointDetect[0] = false;
         }
@@ -589,15 +591,14 @@ void setParameters()
 //area1
         if(areaBtn[1])
         {
-            box_marker1.action = visualization_msgs::Marker::ADD;
-            box_marker1.scale.x = areaScaleX[1];
-            box_marker1.scale.y = areaScaleY[1];
-            box_marker1.scale.z = areaScaleZ[1];
+            area1Box.action = visualization_msgs::Marker::ADD;
+            area1Box.scale.x = areaScaleX[1];
+            area1Box.scale.y = areaScaleY[1];
+            area1Box.scale.z = areaScaleZ[1];
 
-            box_marker1.pose.position.x = areaScaleX[1] / 2.0 + areaPosX[1];
-            box_marker1.pose.position.y = areaPosY[1];
-            box_marker1.pose.position.z = areaPosZ[1];
-
+            area1Box.pose.position.x = areaScaleX[1] / 2.0 + areaPosX[1];
+            area1Box.pose.position.y = areaPosY[1];
+            area1Box.pose.position.z = areaPosZ[1];
 
             x_min[1] = areaPosX[1] , x_max[1] = areaPosX[1] + areaScaleX[1] ;
             y_min[1] = areaPosY[1] - areaScaleY[1] / 2.0, y_max[1] = areaPosY[1] + areaScaleY[1] / 2.0;
@@ -606,21 +607,21 @@ void setParameters()
         }
         else
         {
-            box_marker1.action = visualization_msgs::Marker::DELETE;
+            area1Box.action = visualization_msgs::Marker::DELETE;
             pointCount[1] = 0;
             pointDetect[1] = false;
         }
 
         if(areaBtn[2])
         {
-            box_marker2.action = visualization_msgs::Marker::ADD;
-            box_marker2.scale.x = areaScaleX[2];
-            box_marker2.scale.y = areaScaleY[2];
-            box_marker2.scale.z = areaScaleZ[2];
+            area2Box.action = visualization_msgs::Marker::ADD;
+            area2Box.scale.x = areaScaleX[2];
+            area2Box.scale.y = areaScaleY[2];
+            area2Box.scale.z = areaScaleZ[2];
 
-            box_marker2.pose.position.x = areaScaleX[2] / 2.0 + areaPosX[2];
-            box_marker2.pose.position.y = areaPosY[2];
-            box_marker2.pose.position.z = areaPosZ[2];
+            area2Box.pose.position.x = areaScaleX[2] / 2.0 + areaPosX[2];
+            area2Box.pose.position.y = areaPosY[2];
+            area2Box.pose.position.z = areaPosZ[2];
 
             x_min[2] = areaPosX[2] , x_max[2] = areaPosX[2] + areaScaleX[2] ;
             y_min[2] = areaPosY[2] - areaScaleY[2] / 2.0, y_max[2] = areaPosY[2] + areaScaleY[2] / 2.0;
@@ -628,23 +629,21 @@ void setParameters()
         }
         else
         {
-            box_marker2.action = visualization_msgs::Marker::DELETE;
+            area2Box.action = visualization_msgs::Marker::DELETE;
             pointCount[2] = 0;
             pointDetect[2] = false;
         }            
 
         if(areaBtn[3])
         {
-            box_marker3.action = visualization_msgs::Marker::ADD;
-            box_marker3.scale.x = areaScaleX[3];
-            box_marker3.scale.y = areaScaleY[3];
-            box_marker3.scale.z = areaScaleZ[3];
+            area3Box.action = visualization_msgs::Marker::ADD;
+            area3Box.scale.x = areaScaleX[3];
+            area3Box.scale.y = areaScaleY[3];
+            area3Box.scale.z = areaScaleZ[3];
 
-            box_marker3.pose.position.x = areaScaleX[3] / 2.0 + areaPosX[3];
-            box_marker3.pose.position.y = areaPosY[3];
-            box_marker3.pose.position.z = areaPosZ[3];
-
-            pointCount[3] = 0;
+            area3Box.pose.position.x = areaScaleX[3] / 2.0 + areaPosX[3];
+            area3Box.pose.position.y = areaPosY[3];
+            area3Box.pose.position.z = areaPosZ[3];
 
             x_min[3] = areaPosX[3] , x_max[3] = areaPosX[3] + areaScaleX[3] ;
             y_min[3] = areaPosY[3] - areaScaleY[3] / 2.0, y_max[3] = areaPosY[3] + areaScaleY[3] / 2.0;
@@ -652,7 +651,7 @@ void setParameters()
         }
         else
         {
-            box_marker3.action = visualization_msgs::Marker::DELETE;
+            area3Box.action = visualization_msgs::Marker::DELETE;
             pointCount[3] = 0;
             pointDetect[3] = false;
         }
@@ -740,6 +739,10 @@ void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t lev
     areaPosY[3] = config.a3_width_position;
     areaPosZ[3] = config.a3_height_position;
 
+    pointLimit[0] = config.a0_point_limit;
+    pointLimit[1] = config.a1_point_limit;
+    pointLimit[2] = config.a2_point_limit;
+    pointLimit[3] = config.a3_point_limit;
 
 
 
@@ -1161,27 +1164,7 @@ void updateFrame(std::shared_ptr<Frame> frame)
         pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>());
 #else
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
-#endif
-
-        if(areaBtn[0])
-        {
-            for(const auto& point : cloud->points)
-            {
-                if(point.x >= x_min[0] && point.x <= x_max[0] &&
-                point.y >= y_min[0] && point.y <= y_max[0] &&
-                point.z >= z_min[0] && point.z <= z_max[0]
-                )
-                {
-                    pointCount[0]++;
-                }
-            }   
-            if(pointCount[0] > 0)
-                pointDetect[0] = true;
-            else
-                pointDetect[0] = false; 
-        }
-
-        
+#endif        
         cloud->header.frame_id = "roboscan_frame";
         cloud->header.stamp = pcl_conversions::toPCL(ros::Time::now());
         cloud->width = static_cast<uint32_t>(frame->width);
@@ -1314,7 +1297,7 @@ void updateFrame(std::shared_ptr<Frame> frame)
                     {
                         pointCount[0]++;
                     }
-                    if(pointCount[0] > 0)
+                    if(pointCount[0] > pointLimit[0])
                         pointDetect[0] = true;
                     else
                         pointDetect[0] = false; 
@@ -1330,7 +1313,7 @@ void updateFrame(std::shared_ptr<Frame> frame)
                     {
                         pointCount[1]++;
                     }
-                    if(pointCount[1] > 0)
+                    if(pointCount[1] > pointLimit[1])
                         pointDetect[1] = true;
                     else
                         pointDetect[1] = false; 
@@ -1346,7 +1329,7 @@ void updateFrame(std::shared_ptr<Frame> frame)
                     {
                         pointCount[2]++;
                     }
-                    if(pointCount[2] > 0)
+                    if(pointCount[2] > pointLimit[2])
                         pointDetect[2] = true;
                     else
                         pointDetect[2] = false; 
@@ -1362,7 +1345,7 @@ void updateFrame(std::shared_ptr<Frame> frame)
                     {
                         pointCount[3]++;
                     }
-                    if(pointCount[3] > 0)
+                    if(pointCount[3] > pointLimit[3])
                         pointDetect[3] = true;
                     else
                         pointDetect[3] = false; 
@@ -1411,10 +1394,10 @@ void updateFrame(std::shared_ptr<Frame> frame)
         imagePublisher.publish(cv_ptr->toImageMsg());
         scanPub.publish(scan);
 
-        marker0Pub.publish(box_marker0);
-        marker0Pub.publish(box_marker1);
-        marker0Pub.publish(box_marker2);
-        marker0Pub.publish(box_marker3);
+        area0Pub.publish(area0Box);
+        area1Pub.publish(area1Box);
+        area2Pub.publish(area2Box);
+        area3Pub.publish(area3Box);
 
 
         msgs.header.seq = frameSeq;
@@ -1486,6 +1469,7 @@ void initialise()
 
     //Area 0
     nh.getParam("area0", areaBtn[0]);
+    nh.getParam("a0_point_limit", pointLimit[0]);
     nh.getParam("a0_length_scale", areaScaleX[0]);
     nh.getParam("a0_width_scale", areaScaleY[0]);
     nh.getParam("a0_height_scale", areaScaleZ[0]);   
@@ -1496,6 +1480,7 @@ void initialise()
     
     //Area 1
     nh.getParam("area1", areaBtn[1]);
+    nh.getParam("a1_point_limit", pointLimit[1]);
     nh.getParam("a1_length_scale", areaScaleX[1]);
     nh.getParam("a1_width_scale", areaScaleY[1]);
     nh.getParam("a1_height_scale", areaScaleZ[1]);   
@@ -1506,6 +1491,7 @@ void initialise()
 
     //Area 2
     nh.getParam("area2", areaBtn[2]);
+    nh.getParam("a2_point_limit", pointLimit[2]);
     nh.getParam("a2_length_scale", areaScaleX[2]);
     nh.getParam("a2_width_scale", areaScaleY[2]);
     nh.getParam("a2_height_scale", areaScaleZ[2]);   
@@ -1516,6 +1502,7 @@ void initialise()
 
     //Area 3
     nh.getParam("area3", areaBtn[3]);
+    nh.getParam("a3_point_limit", pointLimit[3]);
     nh.getParam("a3_length_scale", areaScaleX[3]);
     nh.getParam("a3_width_scale", areaScaleY[3]);
     nh.getParam("a3_height_scale", areaScaleZ[3]);   
@@ -1523,8 +1510,6 @@ void initialise()
     nh.getParam("a3_length_position", areaPosX[3]);
     nh.getParam("a3_width_position", areaPosY[3]);
     nh.getParam("a3_height_position", areaPosZ[3]);  
-
-
 
 
     //advertise publishers
@@ -1544,14 +1529,14 @@ void initialise()
     cameraInfoPublisher = nh.advertise<sensor_msgs::CameraInfo>("camera_info", 1000);
     grayImagePublisher = nh.advertise<sensor_msgs::Image>("gray_image_raw", 1000);
     scanPub = nh.advertise<sensor_msgs::LaserScan>("scan", 50);
-    marker0Pub = nh.advertise<visualization_msgs::Marker>("Area0", 1000);
-    marker1Pub = nh.advertise<visualization_msgs::Marker>("Area1", 1000);
-    marker2Pub = nh.advertise<visualization_msgs::Marker>("Area2", 1000); 
-    marker3Pub = nh.advertise<visualization_msgs::Marker>("Area3", 1000);       
+    area0Pub = nh.advertise<visualization_msgs::Marker>("area0", 1000);
+    area1Pub = nh.advertise<visualization_msgs::Marker>("area1", 1000);
+    area2Pub = nh.advertise<visualization_msgs::Marker>("area2", 1000); 
+    area3Pub = nh.advertise<visualization_msgs::Marker>("area3", 1000);       
 
 
     //area advertise publishers
-    areaMsgsPublisher = nh.advertise<roboscan_nsl3130::custom_pub_msg>("Area", 100);
+    areaMsgsPublisher = nh.advertise<roboscan_nsl3130::custom_pub_msg>("area_msg", 100);
 
 
 
@@ -1585,97 +1570,101 @@ void initialise()
 
     ROS_INFO("roboscan_nsl3130 node");
 
-
 //Box Create
-//marker 0
-    box_marker0.header.frame_id = "roboscan_frame";
-    box_marker0.ns = "Markers_Box_" + std::to_string(0);
-    box_marker0.id = 0;
-    box_marker0.type = visualization_msgs::Marker::CUBE;
-    box_marker0.action = visualization_msgs::Marker::ADD;
-    box_marker0.pose.position.x = areaScaleX[0] / 2.0 + areaPosX[0];
-    box_marker0.pose.position.y = areaPosY[0];
-    box_marker0.pose.position.z = areaPosZ[0];
-    box_marker0.pose.orientation.x = 0.0;
-    box_marker0.pose.orientation.y = 0.0;
-    box_marker0.pose.orientation.z = 0.0; 
-    box_marker0.pose.orientation.w = 1.0;
-    box_marker0.scale.x = areaScaleX[0];
-    box_marker0.scale.y = areaScaleY[0];
-    box_marker0.scale.z = areaScaleZ[0];
+//area0
 
-    box_marker0.color.r = 1.0f;
-    box_marker0.color.g = 0.0f;    
-    box_marker0.color.b = 0.0f;
-    box_marker0.color.a = 0.3f;
+    area0Box.header.frame_id = "roboscan_frame";
+    area0Box.ns = "Markers_Box_" + std::to_string(0);
+    area0Box.id = 0;
+    area0Box.type = visualization_msgs::Marker::CUBE;
+    area0Box.action = visualization_msgs::Marker::ADD;
+    area0Box.pose.position.x = areaScaleX[0] / 2.0 + areaPosX[0];
+    area0Box.pose.position.y = areaPosY[0];
+    area0Box.pose.position.z = areaPosZ[0];
+    area0Box.pose.orientation.x = 0.0;
+    area0Box.pose.orientation.y = 0.0;
+    area0Box.pose.orientation.z = 0.0; 
+    area0Box.pose.orientation.w = 1.0;
+    area0Box.scale.x = areaScaleX[0];
+    area0Box.scale.y = areaScaleY[0];
+    area0Box.scale.z = areaScaleZ[0];
+
+    area0Box.color.r = 1.0f;
+    area0Box.color.g = 0.0f;    
+    area0Box.color.b = 0.0f;
+    area0Box.color.a = 0.3f;
 
 //marker 1
-    box_marker1.header.frame_id = "roboscan_frame";
-    box_marker1.ns = "Markers_Box_" + std::to_string(1);
-    box_marker1.id = 1;
-    box_marker1.type = visualization_msgs::Marker::CUBE;
-    box_marker1.action = visualization_msgs::Marker::ADD;
-    box_marker1.pose.position.x = areaScaleX[1] / 2.0 + areaPosX[1];
-    box_marker1.pose.position.y = areaPosY[1];
-    box_marker1.pose.position.z = areaPosZ[1];
-    box_marker1.pose.orientation.x = 0.0;
-    box_marker1.pose.orientation.y = 0.0;
-    box_marker1.pose.orientation.z = 0.0; 
-    box_marker1.pose.orientation.w = 1.0;
-    box_marker1.scale.x = areaScaleX[1];
-    box_marker1.scale.y = areaScaleY[1];
-    box_marker1.scale.z = areaScaleZ[1];
+    area1Box.header.frame_id = "roboscan_frame";
+    area1Box.ns = "Markers_Box_" + std::to_string(1);
+    area1Box.id = 1;
+    area1Box.type = visualization_msgs::Marker::CUBE;
+    area1Box.action = visualization_msgs::Marker::ADD;
+    area1Box.pose.position.x = areaScaleX[1] / 2.0 + areaPosX[1];
+    area1Box.pose.position.y = areaPosY[1];
+    area1Box.pose.position.z = areaPosZ[1];
+    area1Box.pose.orientation.x = 0.0;
+    area1Box.pose.orientation.y = 0.0;
+    area1Box.pose.orientation.z = 0.0; 
+    area1Box.pose.orientation.w = 1.0;
+    area1Box.scale.x = areaScaleX[1];
+    area1Box.scale.y = areaScaleY[1];
+    area1Box.scale.z = areaScaleZ[1];
 
-    box_marker1.color.r = 1.0f;
-    box_marker1.color.g = 1.0f;    
-    box_marker1.color.b = 0.0f;
-    box_marker1.color.a = 0.3f;
+    area1Box.color.r = 1.0f;
+    area1Box.color.g = 1.0f;    
+    area1Box.color.b = 0.0f;
+    area1Box.color.a = 0.3f;
 
-//marker 2
-    box_marker2.header.frame_id = "roboscan_frame";
-    box_marker2.ns = "Markers_Box_" + std::to_string(2);
-    box_marker2.id = 2;
-    box_marker2.type = visualization_msgs::Marker::CUBE;
-    box_marker2.action = visualization_msgs::Marker::ADD;
-    box_marker2.pose.position.x = areaScaleX[2] / 2.0 + areaPosX[2];
-    box_marker2.pose.position.y = areaPosY[2];
-    box_marker2.pose.position.z = areaPosZ[2];
-    box_marker2.pose.orientation.x = 0.0;
-    box_marker2.pose.orientation.y = 0.0;
-    box_marker2.pose.orientation.z = 0.0; 
-    box_marker2.pose.orientation.w = 1.0;
-    box_marker2.scale.x = areaScaleX[2];
-    box_marker2.scale.y = areaScaleY[2];
-    box_marker2.scale.z = areaScaleZ[2];
+//area2
+    area2Box.header.frame_id = "roboscan_frame";
+    area2Box.ns = "Markers_Box_" + std::to_string(2);
+    area2Box.id = 2;
+    area2Box.type = visualization_msgs::Marker::CUBE;
+    area2Box.action = visualization_msgs::Marker::ADD;
+    area2Box.pose.position.x = areaScaleX[2] / 2.0 + areaPosX[2];
+    area2Box.pose.position.y = areaPosY[2];
+    area2Box.pose.position.z = areaPosZ[2];
+    area2Box.pose.orientation.x = 0.0;
+    area2Box.pose.orientation.y = 0.0;
+    area2Box.pose.orientation.z = 0.0; 
+    area2Box.pose.orientation.w = 1.0;
+    area2Box.scale.x = areaScaleX[2];
+    area2Box.scale.y = areaScaleY[2];
+    area2Box.scale.z = areaScaleZ[2];
 
-    box_marker2.color.r = 0.5f;
-    box_marker2.color.g = 1.0f;    
-    box_marker2.color.b = 0.0f;
-    box_marker2.color.a = 0.3f;
+    area2Box.color.r = 0.5f;
+    area2Box.color.g = 1.0f;    
+    area2Box.color.b = 0.0f;
+    area2Box.color.a = 0.3f;
 
-//marker 3
-    box_marker3.header.frame_id = "roboscan_frame";
-    box_marker3.ns = "Markers_Box_" + std::to_string(3);
-    box_marker3.id = 3;
-    box_marker3.type = visualization_msgs::Marker::CUBE;
-    box_marker3.action = visualization_msgs::Marker::ADD;
-    box_marker3.pose.position.x = areaScaleX[3] / 2.0 + areaPosX[3];
-    box_marker3.pose.position.y = areaPosY[3];
-    box_marker3.pose.position.z = areaPosZ[3];
-    box_marker3.pose.orientation.x = 0.0;
-    box_marker3.pose.orientation.y = 0.0;
-    box_marker3.pose.orientation.z = 0.0; 
-    box_marker3.pose.orientation.w = 1.0;
-    box_marker3.scale.x = areaScaleX[3];
-    box_marker3.scale.y = areaScaleY[3];
-    box_marker3.scale.z = areaScaleZ[3];
+//area3
+    area3Box.header.frame_id = "roboscan_frame";
+    area3Box.ns = "Markers_Box_" + std::to_string(3);
+    area3Box.id = 3;
+    area3Box.type = visualization_msgs::Marker::CUBE;
+    area3Box.action = visualization_msgs::Marker::ADD;
+    area3Box.pose.position.x = areaScaleX[3] / 2.0 + areaPosX[3];
+    area3Box.pose.position.y = areaPosY[3];
+    area3Box.pose.position.z = areaPosZ[3];
+    area3Box.pose.orientation.x = 0.0;
+    area3Box.pose.orientation.y = 0.0;
+    area3Box.pose.orientation.z = 0.0; 
+    area3Box.pose.orientation.w = 1.0;
+    area3Box.scale.x = areaScaleX[3];
+    area3Box.scale.y = areaScaleY[3];
+    area3Box.scale.z = areaScaleZ[3];
 
-    box_marker3.color.r = 0.0f;
-    box_marker3.color.g = 1.0f;    
-    box_marker3.color.b = 0.0f;
-    box_marker3.color.a = 0.3f;
+    area3Box.color.r = 0.0f;
+    area3Box.color.g = 1.0f;    
+    area3Box.color.b = 0.0f;
+    area3Box.color.a = 0.3f;
 
-    ROS_INFO("Create BOX");
+
+
+
+
+
 }
 
 

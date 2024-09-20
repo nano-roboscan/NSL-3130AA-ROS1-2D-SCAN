@@ -1,69 +1,38 @@
 camera:
-  C1_Front_Back_Position: 0.5
-  C1_Front_Back_Scale: 0.5
-  C1_Left_Right_Position: 0.0
-  C1_Left_Right_Scale: 1.0
-  C1_Up_Down_Position: 0.0
-  C1_Up_Down_Scale: 1.0
-  C2_Front_Back_Position: 1.0
-  C2_Front_Back_Scale: 0.5
-  C2_Left_Right_Position: 0.0
-  C2_Left_Right_Scale: 1.0
-  C2_Up_Down_Position: 0.0
-  C2_Up_Down_Scale: 1.0
-  C3_Front_Back_Position: 1.5
-  C3_Front_Back_Scale: 0.5
-  C3_Left_Right_Position: 0.0
-  C3_Left_Right_Scale: 1.0
-  C3_Up_Down_Position: 0.0
-  C3_Up_Down_Scale: 1.0
-  Caution1_Area: false
-  Caution2_Area: false
-  Caution3_Area: true
-  E_Front_Back_Position: 0.0
-  E_Front_Back_Scale: 0.5
-  E_Left_Right_Position: 0.0
-  E_Left_Right_Scale: 1.0
-  E_Up_Down_Position: 0.0
-  E_Up_Down_Scale: 1.0
-  Emergency_Area: false
   a0_height_position: 0.0
   a0_height_scale: 1.0
   a0_length_position: 0.0
   a0_length_scale: 0.5
+  a0_point_limit: 100
   a0_width_position: 0.0
   a0_width_scale: 1.0
   a1_height_position: 0.0
   a1_height_scale: 1.0
   a1_length_position: 0.5
   a1_length_scale: 0.5
+  a1_point_limit: 100
   a1_width_position: 0.0
   a1_width_scale: 1.0
   a2_height_position: 0.0
   a2_height_scale: 1.0
   a2_length_position: 1.0
   a2_length_scale: 0.5
+  a2_point_limit: 100
   a2_width_position: 0.0
   a2_width_scale: 1.0
   a3_height_position: 0.0
   a3_height_scale: 1.0
   a3_length_position: 1.5
   a3_length_scale: 0.5
+  a3_point_limit: 100
   a3_width_position: 0.0
   a3_width_scale: 1.0
   area0: true
-  area0_emergency: true
-  area1: false
-  area1_caution: true
-  area2: false
-  area2_caution: true
-  area3: false
-  area3_caution: true
+  area1: true
+  area2: true
+  area3: true
   average_filter: false
   cartesian: true
-  caution_area1: true
-  caution_area2: false
-  caution_area3: false
   channel: 0
   cut_pixels: 0
   cvShow: true
@@ -90,6 +59,7 @@ camera:
   median_filter: false
   min_amplitude: 100
   min_distance: 0
+  point_limit: 100
   publish_point_cloud: true
   roi_left_x: 0
   roi_left_y: 0
