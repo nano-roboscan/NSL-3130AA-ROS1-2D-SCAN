@@ -518,7 +518,7 @@ void setParameters()
     ROS_DEBUG("roi_left_x %d", roi_leftX);
     ROS_DEBUG("roi_right_x %d", roi_rightX);
     ROS_DEBUG("roi_height %d", roi_bottomY - roi_topY);
-    ROS_DEBUG("transform_angle %d", transformAngle);
+    ROS_DEBUG("transform_angle %f", transformAngle);
     ROS_DEBUG("cut_pixels %d", cutPixels);
     ROS_DEBUG("cv_show %d", cvShow);
 
