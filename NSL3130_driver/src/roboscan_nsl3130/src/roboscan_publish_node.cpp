@@ -167,6 +167,8 @@ ros::Publisher pointCloud2Publisher;
 ros::ServiceServer cameraInfoService;
 
 Interface interface;
+
+
 CartesianTransform cartesianTransform;
 sensor_msgs::CameraInfo cameraInfo;
 
@@ -179,7 +181,10 @@ ros::Publisher area1Pub;
 ros::Publisher area2Pub;
 ros::Publisher area3Pub;
 
-
+std::string setIpaddress;
+std::string setSubnetmask;
+std::string setGateway;
+ros::Timer timer;
 //=======================================================================
 
 typedef struct _RGB888Pixel
@@ -270,6 +275,8 @@ static void callback_mouse_click(int event, int x, int y, int flags, void* user_
 	{
 	}
 }
+
+
 
 
 void paramDump()
@@ -444,7 +451,7 @@ int Convert_To_RGB24( float fValue, RGB888Pixel *nRGBData, float fMinValue, floa
 
 void setParameters()
 {
-    interface.stopStream();   
+    interface.stopStream();
 //	interface.setUdpPort(0);
     interface.setMinAmplitude(minAmplitude);
     interface.setIntegrationTime(int0, int1, int2, intGr);
@@ -457,6 +464,7 @@ void setParameters()
     interface.setGrayscaleIlluminationMode(grayscaleIlluminationMode);
 
 
+    
 
     uint8_t modIndex;
     if(frequencyModulation == 0) modIndex = 1;
@@ -470,7 +478,6 @@ void setParameters()
 	interface.setDualBeam(dual_beam, used_dual_beam_distance);
 
     if(startStream){
-
         if(imageType == Frame::GRAYSCALE) interface.streamGrayscale();
         else if(imageType == Frame::DISTANCE) interface.streamDistance();
         else if(imageType == Frame::DISTANCE_AMPLITUDE) interface.streamDistanceAmplitude();
@@ -479,8 +486,7 @@ void setParameters()
 
     }else{
         interface.stopStream();
-        
-  
+
     }
 
     if(old_lensCenterOffsetX != lensCenterOffsetX || old_lensCenterOffsetY != lensCenterOffsetY || old_lensType != lensType){
@@ -490,79 +496,7 @@ void setParameters()
         old_lensType = lensType;
     }
 
-
-    ROS_INFO("set parameters...");
-    ROS_DEBUG("lens_type %d", lensType);
-    ROS_DEBUG("lens_center_offset_x %d", lensCenterOffsetX);
-    ROS_DEBUG("lens_center_offset_y %d", lensCenterOffsetY);
-    ROS_DEBUG("image_type %d", imageType);
-    ROS_DEBUG("start_stream %d", startStream);
-    ROS_DEBUG("hdr_mode %d", hdr_mode);
-    ROS_DEBUG("integration_time0 %d", int0);
-    ROS_DEBUG("integration_time1 %d", int1);
-    ROS_DEBUG("integration_time2 %d", int2);
-    ROS_DEBUG("integration_time_gray %d", intGr);
-    ROS_DEBUG("min_amplitude %d", minAmplitude);
-
-    ROS_DEBUG("frequency_modulation %d", frequencyModulation);
-    ROS_DEBUG("channel %d ", channel);
-    ROS_DEBUG("median_filter %d ", medianFilter);
-    ROS_DEBUG("average_filter %d", averageFilter);
-    ROS_DEBUG("temporal_filter_factor %f", temporalFilterFactor);
-    ROS_DEBUG("temporal_filter_threshold %d ", temporalFilterThreshold);
-    ROS_DEBUG("edge_filter_threshold %d", edgeThreshold);
-    ROS_DEBUG("interference_detection_limit %d ", interferenceDetectionLimit);
-    ROS_DEBUG("use_last_value %d", useLastValue);
-    ROS_DEBUG("cartesian %d", cartesian);
-    ROS_DEBUG("publish_point_cloud %d", publishPointCloud);
-    ROS_DEBUG("roi_left_x %d", roi_leftX);
-    ROS_DEBUG("roi_right_x %d", roi_rightX);
-    ROS_DEBUG("roi_height %d", roi_bottomY - roi_topY);
-    ROS_DEBUG("transform_angle %f", transformAngle);
-    ROS_DEBUG("cut_pixels %d", cutPixels);
-    ROS_DEBUG("cv_show %d", cvShow);
-
-    // Area 0
-    ROS_DEBUG("area_0 : %d", areaBtn[0]);
-    ROS_DEBUG("area_0_length_scale: %f", areaScaleX[0]);
-    ROS_DEBUG("area_0_width_scale: %f", areaScaleY[0]);
-    ROS_DEBUG("area_0_height_scale: %f", areaScaleZ[0]);
-    ROS_DEBUG("area_0_length_position: %f", areaPosX[0]);
-    ROS_DEBUG("area_0_width_position: %f", areaPosY[0]);
-    ROS_DEBUG("area_0_height_position: %f", areaPosZ[0]);
-
-    // Area 1
-    ROS_DEBUG("area_1 : %d", areaBtn[1]);
-    ROS_DEBUG("area_1_length_scale: %f", areaScaleX[1]);
-    ROS_DEBUG("area_1_width_scale: %f", areaScaleY[1]);
-    ROS_DEBUG("area_1_height_scale: %f", areaScaleZ[1]);
-    ROS_DEBUG("area_1_length_position: %f", areaPosX[1]);
-    ROS_DEBUG("area_1_width_position: %f", areaPosY[1]);
-    ROS_DEBUG("area_1_height_position: %f", areaPosZ[1]);
-
-    // Area 2
-    ROS_DEBUG("area_2 : %d", areaBtn[2]);
-    ROS_DEBUG("area_2_length_scale: %f", areaScaleX[2]);
-    ROS_DEBUG("area_2_width_scale: %f", areaScaleY[2]);
-    ROS_DEBUG("area_2_height_scale: %f", areaScaleZ[2]);
-    ROS_DEBUG("area_2_length_position: %f", areaPosX[2]);
-    ROS_DEBUG("area_2_width_position: %f", areaPosY[2]);
-    ROS_DEBUG("area_2_height_position: %f", areaPosZ[2]);
-
-    // Area 3
-    ROS_DEBUG("area_3 : %d", areaBtn[3]);
-    ROS_DEBUG("area_3_length_scale: %f", areaScaleX[3]);
-    ROS_DEBUG("area_3_width_scale: %f", areaScaleY[3]);
-    ROS_DEBUG("area_3_height_scale: %f", areaScaleZ[3]);
-    ROS_DEBUG("area_3_length_position: %f", areaPosX[3]);
-    ROS_DEBUG("area_3_width_position: %f", areaPosY[3]);
-    ROS_DEBUG("area_3_height_position: %f", areaPosZ[3]);
-
-    ROS_DEBUG("point_limit : %d", pointLimit[0]);
-    ROS_DEBUG("point_limit : %d", pointLimit[1]);
-    ROS_DEBUG("point_limit : %d", pointLimit[2]);
-    ROS_DEBUG("point_limit : %d", pointLimit[3]);
-
+    
 
 //area0
     if(areaBtn[0])
@@ -587,8 +521,7 @@ void setParameters()
             pointCount[0] = 0;
             pointDetect[0] = false;
         }
-
-//area1
+        
         if(areaBtn[1])
         {
             area1Box.action = visualization_msgs::Marker::ADD;
@@ -655,8 +588,92 @@ void setParameters()
             pointCount[3] = 0;
             pointDetect[3] = false;
         }
-        paramSave = true;
- 
+    ros::param::set("camera/set_ip", setIpaddress);
+    ros::param::set("camera/set_subnetmask", setSubnetmask);
+    ros::param::set("camera/set_gateway", setGateway);
+
+    paramSave = true;
+    interface.setIp(setIpaddress,setSubnetmask,setGateway);
+
+
+    if(nanosys::TcpConnection::timerStart == true)
+        timer.start();
+    else
+        timer.stop();
+
+    ROS_INFO("set parameters...");
+
+    ROS_DEBUG("lens_type %d", lensType);
+    ROS_DEBUG("lens_center_offset_x %d", lensCenterOffsetX);
+    ROS_DEBUG("lens_center_offset_y %d", lensCenterOffsetY);
+    ROS_DEBUG("image_type %d", imageType);
+    ROS_DEBUG("start_stream %d", startStream);
+    ROS_DEBUG("hdr_mode %d", hdr_mode);
+    ROS_DEBUG("integration_time0 %d", int0);
+    ROS_DEBUG("integration_time1 %d", int1);
+    ROS_DEBUG("integration_time2 %d", int2);
+    ROS_DEBUG("integration_time_gray %d", intGr);
+    ROS_DEBUG("min_amplitude %d", minAmplitude);
+
+    ROS_DEBUG("frequency_modulation %d", frequencyModulation);
+    ROS_DEBUG("channel %d ", channel);
+    ROS_DEBUG("median_filter %d ", medianFilter);
+    ROS_DEBUG("average_filter %d", averageFilter);
+    ROS_DEBUG("temporal_filter_factor %f", temporalFilterFactor);
+    ROS_DEBUG("temporal_filter_threshold %d ", temporalFilterThreshold);
+    ROS_DEBUG("edge_filter_threshold %d", edgeThreshold);
+    ROS_DEBUG("interference_detection_limit %d ", interferenceDetectionLimit);
+    ROS_DEBUG("use_last_value %d", useLastValue);
+    ROS_DEBUG("cartesian %d", cartesian);
+    ROS_DEBUG("publish_point_cloud %d", publishPointCloud);
+    ROS_DEBUG("roi_left_x %d", roi_leftX);
+    ROS_DEBUG("roi_right_x %d", roi_rightX);
+    ROS_DEBUG("roi_height %d", roi_bottomY - roi_topY);
+    ROS_DEBUG("transform_angle %d", transformAngle);
+    ROS_DEBUG("cut_pixels %d", cutPixels);
+    ROS_DEBUG("cv_show %d", cvShow);
+
+    // Area 0
+    ROS_DEBUG("area_0 : %d", areaBtn[0]);
+    ROS_DEBUG("area_0_length_scale: %f", areaScaleX[0]);
+    ROS_DEBUG("area_0_width_scale: %f", areaScaleY[0]);
+    ROS_DEBUG("area_0_height_scale: %f", areaScaleZ[0]);
+    ROS_DEBUG("area_0_length_position: %f", areaPosX[0]);
+    ROS_DEBUG("area_0_width_position: %f", areaPosY[0]);
+    ROS_DEBUG("area_0_height_position: %f", areaPosZ[0]);
+
+    // Area 1
+    ROS_DEBUG("area_1 : %d", areaBtn[1]);
+    ROS_DEBUG("area_1_length_scale: %f", areaScaleX[1]);
+    ROS_DEBUG("area_1_width_scale: %f", areaScaleY[1]);
+    ROS_DEBUG("area_1_height_scale: %f", areaScaleZ[1]);
+    ROS_DEBUG("area_1_length_position: %f", areaPosX[1]);
+    ROS_DEBUG("area_1_width_position: %f", areaPosY[1]);
+    ROS_DEBUG("area_1_height_position: %f", areaPosZ[1]);
+
+    // Area 2
+    ROS_DEBUG("area_2 : %d", areaBtn[2]);
+    ROS_DEBUG("area_2_length_scale: %f", areaScaleX[2]);
+    ROS_DEBUG("area_2_width_scale: %f", areaScaleY[2]);
+    ROS_DEBUG("area_2_height_scale: %f", areaScaleZ[2]);
+    ROS_DEBUG("area_2_length_position: %f", areaPosX[2]);
+    ROS_DEBUG("area_2_width_position: %f", areaPosY[2]);
+    ROS_DEBUG("area_2_height_position: %f", areaPosZ[2]);
+
+    // Area 3
+    ROS_DEBUG("area_3 : %d", areaBtn[3]);
+    ROS_DEBUG("area_3_length_scale: %f", areaScaleX[3]);
+    ROS_DEBUG("area_3_width_scale: %f", areaScaleY[3]);
+    ROS_DEBUG("area_3_height_scale: %f", areaScaleZ[3]);
+    ROS_DEBUG("area_3_length_position: %f", areaPosX[3]);
+    ROS_DEBUG("area_3_width_position: %f", areaPosY[3]);
+    ROS_DEBUG("area_3_height_position: %f", areaPosZ[3]);
+
+    ROS_DEBUG("point_limit : %d", pointLimit[0]);
+    ROS_DEBUG("point_limit : %d", pointLimit[1]);
+    ROS_DEBUG("point_limit : %d", pointLimit[2]);
+    ROS_DEBUG("point_limit : %d", pointLimit[3]);
+    
 }
 
 
@@ -696,6 +713,10 @@ void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t lev
 
 	dual_beam = config.dual_beam;
 	used_dual_beam_distance = config.dual_beam_dist;
+
+    setIpaddress = config.set_ip;
+    setSubnetmask = config.set_subnetmask;
+    setGateway = config.set_gateway;
 
 	setWinName(config.cvShow);
     
@@ -745,6 +766,7 @@ void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t lev
     pointLimit[3] = config.a3_point_limit;
 
 
+   
 
     //add
     grayscaleIlluminationMode = 1;
@@ -800,10 +822,10 @@ void updateConfig(roboscan_nsl3130::roboscan_nsl3130Config &config, uint32_t lev
 	//printf("x = %d y = %d width = %d height = %d\n", roi_leftX, roi_topY, roi_rightX, roi_bottomY);
     
     setParameters();  
+    
+
+
 }
-
-
-
 
 
 bool setCameraInfo(sensor_msgs::SetCameraInfo::Request& req, sensor_msgs::SetCameraInfo::Response& res)
@@ -850,6 +872,7 @@ void startStreaming()
     default:
         break;
     }
+
 }
 
 
@@ -1426,10 +1449,15 @@ void updateFrame(std::shared_ptr<Frame> frame)
 }
 
 
-
-
-
-
+void reConnection(const ros::TimerEvent&) {
+    if(nanosys::TcpConnection::reConnect == true)
+    {
+        setParameters();
+        nanosys::TcpConnection::reConnect = false;
+        timer.stop();
+    }
+    
+}
 
 //===================================================
 
@@ -1511,11 +1539,14 @@ void initialise()
     nh.getParam("a3_width_position", areaPosY[3]);
     nh.getParam("a3_height_position", areaPosZ[3]);  
 
+    nh.getParam("set_ip", setIpaddress);
+    nh.getParam("set_subnetmask", setSubnetmask);
+    nh.getParam("set_gateway", setGateway);
 
     //advertise publishers
     distanceImagePublisher = nh.advertise<sensor_msgs::Image>("distance_image_raw", 1000);
     amplitudeImagePublisher = nh.advertise<sensor_msgs::Image>("amplitude_image_raw", 1000);
-    dcsImagePublisher = nh.advertise<sensor_msgs::Image>("dcs_image_raw", 1000);
+    dcsImagePublisher = nh.advertise<sensor_msgs::Image>("dcs_image_rawc", 1000);
 
 
 
@@ -1545,7 +1576,7 @@ void initialise()
     imagePublisher = it_.advertise("image_distance", 1000);
 
 
-    
+
 
     //advertise services
     cameraInfoService = nh.advertiseService("set_camera_info", setCameraInfo);
@@ -1568,6 +1599,8 @@ void initialise()
 	  colorVector.push_back(Vec3b(blue, green, red));
 	}
 
+
+    timer = nh.createTimer(ros::Duration(1.0), reConnection);
     ROS_INFO("roboscan_nsl3130 node");
 
 //Box Create
@@ -1660,11 +1693,8 @@ void initialise()
     area3Box.color.b = 0.0f;
     area3Box.color.a = 0.3f;
 
-
-
-
-
-
+    interface.tcpInitialize(setIpaddress);
+    
 }
 
 
@@ -1683,15 +1713,13 @@ int main(int argc, char **argv)
     dynamic_reconfigure::Server<roboscan_nsl3130::roboscan_nsl3130Config>::CallbackType f;
     f = boost::bind(&updateConfig, _1, _2);
     server.setCallback(f);
-    
+
+   
+
     initialise();
     setParameters();
     startStreaming();
 
-
-
-
-    
     
 
     ros::spin();

@@ -3,29 +3,29 @@ camera:
   a0_height_scale: 1.0
   a0_length_position: 0.0
   a0_length_scale: 0.5
-  a0_point_limit: 100
-  a0_width_position: 0.0
+  a0_point_limit: 0
+  a0_width_position: -1.0
   a0_width_scale: 1.0
   a1_height_position: 0.0
   a1_height_scale: 1.0
   a1_length_position: 0.5
   a1_length_scale: 0.5
-  a1_point_limit: 100
-  a1_width_position: 0.0
+  a1_point_limit: 0
+  a1_width_position: 1.0
   a1_width_scale: 1.0
   a2_height_position: 0.0
   a2_height_scale: 1.0
   a2_length_position: 1.0
   a2_length_scale: 0.5
-  a2_point_limit: 100
-  a2_width_position: 0.0
+  a2_point_limit: 0
+  a2_width_position: -1.0
   a2_width_scale: 1.0
   a3_height_position: 0.0
   a3_height_scale: 1.0
   a3_length_position: 1.5
   a3_length_scale: 0.5
-  a3_point_limit: 100
-  a3_width_position: 0.0
+  a3_point_limit: 0
+  a3_width_position: 1.0
   a3_width_scale: 1.0
   area0: true
   area1: true
@@ -35,11 +35,10 @@ camera:
   cartesian: true
   channel: 0
   cut_pixels: 0
-  cvShow: true
+  cvShow: false
   dual_beam: 2
   dual_beam_dist: true
   edge_filter_threshold: 0
-  emergency_area0: true
   frequency_modulation: 0
   hdr_mode: 0
   image_distance:
@@ -59,12 +58,14 @@ camera:
   median_filter: false
   min_amplitude: 100
   min_distance: 0
-  point_limit: 100
   publish_point_cloud: true
   roi_left_x: 0
   roi_left_y: 0
   roi_right_x: 319
   roi_right_y: 239
+  set_gateway: 192.168.0.1
+  set_ip: 192.168.0.171
+  set_subnetmask: 255.255.255.0
   start_stream: true
   temporal_filter_factor: 0.3
   temporal_filter_threshold: 300

@@ -32,8 +32,8 @@
   <arg name="cut_pixels" default="0"/>
 
   <rosparam file ="$(find roboscan_nsl3130)/rqt/rqt.yaml" command="load" ns="$(arg ns)" />
-  <group ns="$(arg ns)">
 
+  <group ns="$(arg ns)">
 
         <node pkg="roboscan_nsl3130"
           type="roboscan_publish_node"
